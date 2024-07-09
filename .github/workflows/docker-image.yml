@@ -1,0 +1,37 @@
+name: Docker Image CI
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+
+  build:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v4
+
+
+       # Uncomment the following lines if you want to work with AWS ECR
+    - name: Configure AWS credentials
+      uses: aws-actions/configure-aws-credentials@v1
+      with:
+        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        aws-region: ap-northeast-3 # Replace with your AWS region, e.g., us-west-2
+
+
+    - name: Login to Amazon ECR
+      id: login-ecr
+      run: |
+        aws ecr get-login-password --region ap-northeast-3 | docker login --username AWS --password-stdin 939737198590.dkr.ecr.ap-northeast-3.amazonaws.com
+        
+    - name: Build and push Docker image to ECR
+      run: |
+        docker build -t hello .
+        docker tag hello:latest 939737198590.dkr.ecr.ap-northeast-3.amazonaws.com/hello:1.0
+        docker push 939737198590.dkr.ecr.ap-northeast-3.amazonaws.com/hello:1.0
